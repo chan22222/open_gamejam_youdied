@@ -412,6 +412,13 @@ function spawnDust(scene, x, y) {
 export function createStaticPlatform(scene, group, x, y, w, h = 32, texture = 'earth', tint = 0xffffff) {
   const platform = group.create(x, y, texture);
   platform.setDisplaySize(w, h).setTint(tint).refreshBody().setDepth(12);
+  // 얇은 공중 발판(h<=30)은 원웨이 — 아래에서 점프하면 뚫고 올라간다.
+  // 두꺼운 지면/벽은 그대로 완전 충돌.
+  if (h <= 30 && platform.body) {
+    platform.body.checkCollision.down = false;
+    platform.body.checkCollision.left = false;
+    platform.body.checkCollision.right = false;
+  }
   return platform;
 }
 

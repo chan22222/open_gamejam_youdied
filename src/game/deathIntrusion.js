@@ -112,14 +112,18 @@ export function triggerDeathIntrusion(scene, cause) {
   if (scene.__dying || scene.__truce) return;
   if (scene.__intrusion && !scene.__intrusion.done) return;
 
-  // 이전 침입의 잔해(글자 발판/버튼)는 걷어낸다 — 겹쳐 쌓이면 밀 수 없게 된다.
+  // 이전 침입의 잔해(버튼/시체 발판)는 걷어낸다 — 겹쳐 쌓이면 밀 수 없게 된다.
+  // 주의: 그룹 자체를 destroy하면 그 그룹을 참조하는 콜라이더가 매 프레임 크래시한다(2회 사망 프리즈).
+  // 그룹은 살려두고 내용물만 비운다.
   if (scene.__intrusion && scene.__intrusion.done) {
     const prev = scene.__intrusion;
-    (prev.debris || []).forEach((obj) => {
-      if (obj && obj.active && obj.destroy) obj.destroy();
-    });
-    if (prev.solids && prev.solids.destroy) prev.solids.destroy(true);
-    if (prev.buttons && prev.buttons.destroy) prev.buttons.destroy(true);
+    try {
+      if (prev.buttons && prev.buttons.clear) prev.buttons.clear(true, true);
+      if (prev.solids && prev.solids.clear) prev.solids.clear(true, true);
+      (prev.debris || []).forEach((obj) => {
+        if (obj && obj.active && obj.destroy) obj.destroy();
+      });
+    } catch { /* 정리 실패해도 진행 */ }
     scene.__intrusion = null;
   }
 
@@ -149,6 +153,26 @@ export function triggerDeathIntrusion(scene, cause) {
   scene.__intrusion = st;
   scene.__dying = true;
   ensureCleanupHook(scene);
+
+  // 워치독 — 어떤 링크가 끊겨도 침입은 6초 안에 반드시 끝난다 (게임 멈춤 방지)
+  delay(scene, st, 6000, () => {
+    if (st.done) return;
+    try {
+      if (!st.erasing) performErase(scene, st);
+    } catch { /* 이펙트 실패 무시 */ }
+    scene.time.delayedCall(1500, () => {
+      if (st.dead || st.done) return;
+      try {
+        dissolve(scene, st);
+      } catch {
+        st.done = true;
+        st.dissolved = true;
+        st.active = false;
+        scene.__truce = false;
+        scene.__dying = false;
+      }
+    });
+  });
 
   // --- 1단계: 쓰러짐 — 기존 사망 연출(슬로모/셰이크/플래시) 재사용, 씬 전환 없음 ---
   if (player) {
@@ -328,9 +352,9 @@ function spawnIntrusionWorld(scene, st) {
       const pb = playerObj.body;
       if (!pb || !btn.body) return;
       const airborne = !pb.blocked.down && !pb.touching.down;
-      if (airborne || Math.abs(pb.velocity.y) > 60) {
+      if (airborne && Math.abs(pb.velocity.y) > 120) {
         const dir = btn.x >= playerObj.x ? 1 : -1;
-        btn.setVelocity(dir * 320, -250);
+        btn.setVelocity(dir * 230, -190);
         safeSfx('ui');
       }
     });
@@ -376,7 +400,8 @@ function makeIntrusionButton(scene, st, x, y, wear) {
   const btn = scene.physics.add.sprite(x, y, key);
   btn.setDepth(D_WORLD + 1).setPushable(true);
   btn.body.setSize(BTN_W - 6, BTN_H - 10).setOffset(3, 5);
-  btn.setDragX(1500).setMaxVelocity(420, 980).setBounce(0.15);
+  // 최대 가로 속도 200 — 캐릭터(265)보다 느려서 밀 때 묵직하게 끌린다
+  btn.setDragX(1500).setMaxVelocity(200, 980).setBounce(0.05);
   btn.setCollideWorldBounds(true);
   st.buttons.add(btn);
   st.debris.push(btn);
