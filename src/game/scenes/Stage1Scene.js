@@ -598,6 +598,8 @@ export class Stage1Scene extends Phaser.Scene {
 
   detect(sk) {
     if (this.finished || this.__dying || this.__truce) return;
+    if (this.time.now < (this.detectLockUntil || 0)) return;
+    this.detectLockUntil = this.time.now + 1400;
     sk.q.setText('!').setColor('#ef4d5b').setAlpha(1).setScale(1.5);
     sk.sprite.setFlipX(this.player.x < sk.sprite.x);
     this.crosshair.setPosition(this.player.x, this.player.y - 34).setAlpha(1).setScale(3.2).setAngle(0);
@@ -615,7 +617,11 @@ export class Stage1Scene extends Phaser.Scene {
       duration: 400,
     });
     try { audio.sfx('shot'); } catch { /* noop */ }
-    killPlayer(this, 'SOUND');
+    // 죽음 없음 — 들키면 입구로 돌려보내기만 한다.
+    this.cameras.main.flash(130, 239, 77, 91);
+    this.cameras.main.shake(120, 0.006);
+    this.player.setPosition(120, 560).setVelocity(0, 0);
+    if (sk.s !== undefined) sk.s = 0;
   }
 
   // -------------------------------------------------------------------------

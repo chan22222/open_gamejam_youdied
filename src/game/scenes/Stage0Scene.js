@@ -71,7 +71,6 @@ export class Stage0Scene extends Phaser.Scene {
 
     this.createLocalTextures();
     this.createRoom();
-    this.createSpikes();
     this.createDoor();
     this.createGate();
     this.createGraffiti();
@@ -471,14 +470,7 @@ export class Stage0Scene extends Phaser.Scene {
   }
 
   updateSpikes() {
-    // 침입(truce) / 사망 연출 중엔 재사망 없음 (PATCH2 truce 규칙)
-    if (this.__truce || this.__dying) return;
-    const body = this.player.body;
-    if (!body || !body.enable) return;
-    // 발이 바닥 높이에 있고(시체 발판 위는 안전) 가시 구간과 겹치면 — 어둠이 발밑을 문다
-    if (this.player.y < FLOOR_TOP - 6 || this.player.y > FLOOR_TOP + 14) return;
-    if (body.x + body.width < SPIKE_L + 8 || body.x > SPIKE_R - 8) return;
-    killPlayer(this, 'DARKNESS');
+    // 1스테이지엔 치명 요소 없음 — 밝기 퍼즐만.
   }
 
   updateGate() {
