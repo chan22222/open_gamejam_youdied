@@ -58,7 +58,6 @@ export function preloadShared(scene) {
   scene.load.image('grass-tiles', `${root}/map/SproutLands/Tilesets/Grass.png`);
   scene.load.image('hills-tiles', `${root}/map/SproutLands/Tilesets/Hills.png`);
   scene.load.image('water-tiles', `${root}/map/SproutLands/Tilesets/Water.png`);
-  scene.load.image('biome-objects', `${root}/map/SproutLands/Objects/Basic_Grass_Biom_things.png`);
   scene.load.image('bridge-object', `${root}/map/SproutLands/Objects/Wood_Bridge.png`);
   scene.load.image('chicken-house', `${root}/map/SproutLands/Objects/Free_Chicken_House.png`);
   scene.load.image('crosshair', `${root}/ui/crosshairs.png`);

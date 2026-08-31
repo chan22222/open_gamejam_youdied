@@ -211,8 +211,6 @@ export class Stage2Scene extends Phaser.Scene {
     createStaticPlatform(this, this.solids, 470, 352, 110, 22);
     this.add.rectangle(480, 770, 960, 460, 0x0a141a).setDepth(-6); // 공허 위의 기둥 단면
 
-    this.add.image(300, 502, 'biome-objects').setScale(1.15).setOrigin(0.5, 1).setDepth(10).setTint(0x557d5b);
-    this.add.image(846, 502, 'biome-objects').setScale(0.9).setOrigin(0.5, 1).setDepth(10).setTint(0x486e50).setFlipX(true);
 
     // 낙서 (서사 = 한국어 세리프, 시스템 = 영문 모노)
     this.addGraffiti(430, 420, '"화면은 벽이 아니다. 값이다"', { size: 16, color: '#8fae9b', angle: -1.5 });

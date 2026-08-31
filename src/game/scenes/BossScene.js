@@ -127,7 +127,7 @@ export class BossScene extends Phaser.Scene {
       this.onPlayerHit();
     });
     this.physics.add.overlap(this.player, this.homers, () => this.onPlayerHit());
-    this.physics.add.collider(this.shots, this.platforms, (shot) => this.destroyShot(shot, true));
+    // 탄막은 지형을 통과한다 — 막을 수 있는 것은 설정 창(UI)뿐이다. (수명 4.2s로 자연 소멸)
 
     emitState({
       mode: 'boss',
@@ -388,10 +388,12 @@ export class BossScene extends Phaser.Scene {
       repeat: full.length - 1,
       callback: () => {
         i += 1;
-        if (!target.active) return;
-        target.setText(full.slice(0, i));
-        const ch = full[i - 1];
-        if (ch && ch !== ' ' && ch !== '\n' && i % 2 === 0) sfx('type');
+        if (target.active) {
+          target.setText(full.slice(0, i));
+          const ch = full[i - 1];
+          if (ch && ch !== ' ' && ch !== '\n' && i % 2 === 0) sfx('type');
+        }
+        // 텍스트가 파괴돼도 진행 콜백은 반드시 전달한다 — 연출 체인 유실 방지
         if (i >= full.length && onDone) onDone();
       },
     });
@@ -1065,13 +1067,20 @@ export class BossScene extends Phaser.Scene {
     this.time.delayedCall(1600, () => this.whenSafe(() => this.beginPhase4(false)));
   }
 
-  // intrusion 활성(__truce) / 사망 연출(__dying)이 끝날 때까지 콜백을 미룬다
-  whenSafe(cb) {
+  // intrusion 활성(__truce) / 사망 연출(__dying)이 끝날 때까지 콜백을 미룬다.
+  // 어떤 이유로든 플래그가 안 풀리면(연출 체인 유실 등) 강제로 걷어내고 진행한다 — 절대 멈추지 않는다.
+  whenSafe(cb, deadline = 14) {
     if (!this.__truce && !this.__dying) {
       cb();
       return;
     }
-    this.time.delayedCall(300, () => this.whenSafe(cb));
+    if (deadline <= 0) {
+      this.__truce = false;
+      this.__dying = false;
+      cb();
+      return;
+    }
+    this.time.delayedCall(300, () => this.whenSafe(cb, deadline - 1));
   }
 
   spawnHomer() {
@@ -1240,11 +1249,14 @@ export class BossScene extends Phaser.Scene {
   }
 
   // 최종 일격 — truce가 살아 있으면 걷힐 때까지 재시도한다 (killPlayer는 truce 중 no-op)
-  finalKill() {
+  finalKill(tries = 0) {
     if (this.__dying) return;
     if (this.__truce) {
-      this.time.delayedCall(350, () => this.finalKill());
-      return;
+      if (tries < 8) {
+        this.time.delayedCall(350, () => this.finalKill(tries + 1));
+        return;
+      }
+      this.__truce = false; // 재시도 한계 — 강제로 걷어내고 최종 연출 진행
     }
     killPlayer(this, 'ADMIN');
   }

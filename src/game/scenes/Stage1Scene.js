@@ -222,22 +222,6 @@ export class Stage1Scene extends Phaser.Scene {
     createStaticPlatform(this, this.platforms, 1640, 361, 120, 26, 'earth', 0xbcd4b4);
     createStaticPlatform(this, this.platforms, 1830, 425, 110, 26, 'earth', 0xbcd4b4);
 
-    // 수풀 (위장 스팟 — Q를 웅크릴 자리)
-    const bushes = [
-      [430, 600, 1.3, 0x5f8f5c, 10],
-      [600, 600, 1.15, 0x527d57, 10],
-      [1240, 600, 1.3, 0x6b9464, 34],
-      [1335, 520, 1.2, 0x527d57, 10],
-      [1880, 520, 1.25, 0x5f8f5c, 34],
-      [2100, 560, 1.2, 0x608c5f, 10],
-    ];
-    for (const [x, y, scale, tint, depth] of bushes) {
-      this.add.image(x, y, 'biome-objects')
-        .setOrigin(0.5, 1).setScale(scale).setTint(tint).setDepth(depth)
-        .setAlpha(depth > 30 ? 0.92 : 1)
-        .setFlipX((x * 7) % 2 === 1);
-    }
-
     // 산책로 표식
     this.add.image(1000, 600, 'bridge-object').setOrigin(0.5, 1).setScale(2.2).setAlpha(0.35).setTint(0x4b6b52).setDepth(4);
   }

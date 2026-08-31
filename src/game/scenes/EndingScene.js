@@ -127,12 +127,6 @@ export class EndingScene extends Phaser.Scene {
       .setDepth(19);
     this.tweens.add({ targets: this.houseGlow, alpha: { from: 0.2, to: 0.4 }, duration: 1800, yoyo: true, repeat: -1 });
 
-    // 초원 소품
-    this.add.image(300, GROUND_TOP + 6, 'biome-objects').setScale(1.2).setOrigin(0.5, 1)
-      .setTint(0x9dbb6e).setDepth(11);
-    this.add.image(760, GROUND_TOP + 6, 'biome-objects').setScale(1.05).setOrigin(0.5, 1)
-      .setTint(0x8aa864).setDepth(11).setFlipX(true);
-
     // 따뜻한 부유 입자
     for (let i = 0; i < 22; i += 1) {
       addFloatingMote(this, Phaser.Math.Between(40, WORLD_W - 40), Phaser.Math.Between(120, 490), 0xf0d9a0, 1);
