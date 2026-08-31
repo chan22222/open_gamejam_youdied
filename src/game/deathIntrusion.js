@@ -343,29 +343,7 @@ function spawnIntrusionWorld(scene, st) {
     .filter((g) => g && g !== st.solids);
   if (scene.player) {
     scene.physics.add.collider(scene.player, st.solids);
-    // 공중에서 몸으로 치면 버튼이 날아간다 — 끼임 방지
-    scene.physics.add.collider(scene.player, st.buttons, (playerObj, btn) => {
-      const pb = playerObj.body;
-      if (!pb || !btn.body) return;
-      const airborne = !pb.blocked.down && !pb.touching.down;
-      if (airborne && Math.abs(pb.velocity.y) > 160) {
-        const now = scene.time.now;
-        if (now - (btn.__stompAt || 0) < 350) return; // 연속 접촉 프레임 중복 방지
-        btn.__stompAt = now;
-        btn.__stomps = (btn.__stomps || 0) + 1;
-        if (btn.__stomps >= 2) {
-          // 두 번째 밟기부터 튕겨 나간다
-          btn.__stomps = 0;
-          const dir = btn.x >= playerObj.x ? 1 : -1;
-          btn.setVelocity(dir * 140, -130);
-          safeSfx('ui');
-        } else {
-          // 첫 밟기: 눌리는 반응만
-          scene.tweens.add({ targets: btn, scaleY: 0.86, duration: 70, yoyo: true });
-          safeSfx('type');
-        }
-      }
-    });
+    scene.physics.add.collider(scene.player, st.buttons);
   }
   scene.physics.add.collider(st.buttons, st.solids);
   scene.physics.add.collider(st.buttons, st.buttons);
@@ -411,6 +389,8 @@ function makeIntrusionButton(scene, st, x, y, wear) {
   // 무겁고 느리게 — 질량으로 밀림 자체를 둔하게, 속도 상한은 캐릭터(265)의 절반 근처
   btn.setDragX(1600).setMaxVelocity(140, 980).setBounce(0);
   btn.body.setMass(4);
+  // 일반 발판처럼 — 아래에서 점프하면 뚫고 올라간다 (옆 밀기는 유지)
+  btn.body.checkCollision.down = false;
   btn.setCollideWorldBounds(true);
   st.buttons.add(btn);
   st.debris.push(btn);
