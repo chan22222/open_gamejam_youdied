@@ -556,14 +556,14 @@ function performErase(scene, st) {
   st.flash.setAlpha(0.9);
   scene.tweens.add({ targets: st.flash, alpha: 0, duration: 430, ease: 'Cubic.easeOut' });
 
-  // 기록 갱신 — 규칙 무력화
+  // 해금을 먼저, 저장을 나중에 — saveRunState가 설정 스냅샷까지 저장하므로
+  // 순서가 뒤집히면 이어하기 저장본에 방금 얻은 권한이 빠진다.
+  const freshUnlock = st.cfg.unlock && !store.isUnlocked(st.cfg.unlock);
+  if (st.cfg.unlock) store.unlock(st.cfg.unlock);
+
   const runState = getRunState(scene);
   runState.erased[st.cfg.word] = true;
   saveRunState(scene, runState);
-
-  // 해금 (SPIKES → shake 포함)
-  const freshUnlock = st.cfg.unlock && !store.isUnlocked(st.cfg.unlock);
-  if (st.cfg.unlock) store.unlock(st.cfg.unlock);
 
   emitState({
     mode: hudMode(scene),
@@ -666,6 +666,15 @@ function dissolve(scene, st) {
     });
   });
   safeSfx('ui');
+
+  // 침입이 끝났으니 스테이지 HUD를 복원한다 (씬별 관례 메서드가 있으면 호출)
+  scene.time.delayedCall(1400, () => {
+    try {
+      if (typeof scene.emitStatus === 'function') scene.emitStatus();
+      else if (typeof scene.refreshHud === 'function') scene.refreshHud();
+      else if (typeof scene.pushState === 'function') scene.pushState({});
+    } catch { /* HUD 복원 실패는 치명적이지 않다 */ }
+  });
 }
 
 // ---------------------------------------------------------------------------

@@ -610,9 +610,11 @@ export class Stage2Scene extends Phaser.Scene {
     const mx = this.module.x;
     const my = this.module.y;
 
+    // 해금을 저장보다 먼저 — 저장본에 unlocked.controls가 빠지면
+    // 이어하기 시 모듈은 소멸했는데 CONTROLS는 잠긴 영구 소프트락이 된다.
+    store.unlock('controls');
     this.runState.dashFound = true;
     saveRunState(this, this.runState);
-    store.unlock('controls');
 
     audio.sfx('collect');
     this.time.delayedCall(220, () => audio.sfx('unlock'));

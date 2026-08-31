@@ -5,6 +5,7 @@
 import Phaser from 'phaser';
 import { EV, emitState, on } from '../events.js';
 import { applySavedSettings, clearSave, loadProgress } from '../persistence.js';
+import { store } from '../settingsStore.js';
 import {
   VIEW_WIDTH,
   VIEW_HEIGHT,
@@ -142,6 +143,8 @@ export class BootScene extends Phaser.Scene {
         applySavedSettings(saved);
         // 해당 스테이지를 처음부터 — 시체/체크포인트/보스 페이즈는 복원하지 않는다.
         const restored = { ...defaultRunState(), ...saved.runState, started: true, bossPhase: 0 };
+        // 구버전 저장 방어: 대시 모듈을 먹었는데 CONTROLS가 잠겨 있으면 풀어준다
+        if (restored.dashFound) store.unlock('controls');
         this.registry.set('runState', restored);
         this.registry.set('corpses', []);
         this.registry.set('stage2Checkpoint', false);

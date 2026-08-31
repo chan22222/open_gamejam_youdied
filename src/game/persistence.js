@@ -61,9 +61,11 @@ export function applySavedSettings(saved) {
     ['brightness', 'volume', 'display', 'shake'].forEach((key) => {
       if (typeof st[key] === 'number') store.set(key, st[key]);
     });
-    Object.keys(st.bindings || {}).forEach((action) => {
-      const current = store.getState().bindings[action];
-      if (st.bindings[action] !== current) store.rebind(action, st.bindings[action]);
+    // 순환 치환(좌우 스왑 등)도 복원되도록 전부 비운 뒤 다시 바인딩한다
+    const actions = Object.keys(st.bindings || {});
+    actions.forEach((action) => store.rebind(action, null));
+    actions.forEach((action) => {
+      if (st.bindings[action] != null) store.rebind(action, st.bindings[action]);
     });
   } catch {
     // 복원 실패 시 기본값으로 진행
