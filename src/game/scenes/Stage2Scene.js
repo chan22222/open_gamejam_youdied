@@ -256,7 +256,11 @@ export class Stage2Scene extends Phaser.Scene {
     createStaticPlatform(this, this.solids, 997, 620, 50, 20, 'earth', 0x91a9b5);
     // 우측 탈출 선반 없음 + 우측 림 아래 돌출 차양 — 죽음 잔해로는 오른쪽으로 못 나간다.
     // 협곡 횡단은 DISPLAY로 실체화한 유령 발판만이 길이다. (왼쪽 선반으로 되돌아가는 건 가능)
-    createStaticPlatform(this, this.solids, 1860, 600, 260, 34, 'death-stone', 0x3a4750);
+    const canyonLip = createStaticPlatform(this, this.solids, 1860, 600, 260, 34, 'death-stone', 0x3a4750);
+    canyonLip.body.checkCollision.up = false; // 밟고 올라설 수 없다 — 아래 차단 전용
+
+    // 협곡 중앙 안전 바위 — 한가운데서 가시에 죽어도 시체 위에 고립되지 않게
+    createStaticPlatform(this, this.solids, 1450, 610, 130, 24, 'death-stone', 0x4a5a63);
 
     this.createGhostPlatform(1085, 512, 120, 26, 88);
     this.createGhostPlatform(1225, 462, 110, 24, 83);
@@ -326,8 +330,10 @@ export class Stage2Scene extends Phaser.Scene {
     createStaticPlatform(this, this.solids, 2280, 820, 580, 40, 'earth', cold);
     // 최종 착지 발판 (70px 아래 — 대시+점프 전용)
     createStaticPlatform(this, this.solids, 3095, 890, 290, 40, 'earth', cold);
-    // 최종 구덩이 우측 림 아래 차양 — 죽음 잔해로 대시 구간을 우회하지 못하게
-    createStaticPlatform(this, this.solids, 2880, 930, 140, 34, 'death-stone', 0x3a4750);
+    // 최종 구덩이 우측 림 아래 차양 — 죽음 잔해로 대시 구간을 우회하지 못하게.
+    // 밟고 올라설 수도 없다 (일반 점프로 차양→착지 발판 우회 차단)
+    const gapLip = createStaticPlatform(this, this.solids, 2880, 930, 140, 34, 'death-stone', 0x3a4750);
+    gapLip.body.checkCollision.up = false;
 
     // PATCH2: 최종 간격 바닥 — 가시 구덩이 (낙사 대신 밟는 죽음, 잔해가 다리가 된다)
     createStaticPlatform(
