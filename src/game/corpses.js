@@ -1,5 +1,6 @@
 // ESC/APE — 시체 시스템 (A2 core-engine)
-// 죽은 자리마다 시체가 영구히 남고, 시체는 밟을 수 있는 발판이 된다.
+// 죽은 자리마다 시체가 남는다 — 순수 배경(충돌 없음).
+// 발판이 되면 반복 자살로 가시를 덮는 치트가 되므로 밟을 수 없다.
 // registry 'corpses' 배열: [{ sceneKey, x, y }, ...]
 
 import Phaser from 'phaser';
@@ -22,14 +23,8 @@ export function spawnCorpses(scene, sceneKey) {
     corpse.setTint(0xaab6b2); // 희미하게 바랜 회색 — 죽음의 시간차
     corpse.refreshBody();
 
-    // 누워 있는 몸통만 발판이 되도록 납작한 히트박스로 교체
-    const body = corpse.body;
-    const bw = 58;
-    const bh = 18;
-    body.setSize(bw, bh);
-    body.position.x = c.x - bw / 2;
-    body.position.y = c.y - bh;
-    if (body.updateCenter) body.updateCenter();
+    // 충돌 없음 — 시체는 장식이다
+    corpse.body.enable = false;
 
     // 시체 위로 피어오르는 희미한 넋
     if (scene.textures.exists('white-pixel')) {

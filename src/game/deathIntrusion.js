@@ -280,16 +280,12 @@ function reveal(scene, st) {
 }
 
 function wakeCat(scene, st) {
-  // 몸은 남는다 — 시체 발판 실체화 (다음 방문의 spawnCorpses와 동일 규격)
+  // 몸은 남는다 — 순수 배경 (충돌 없음: 시체 발판으로 가시를 덮는 치트 방지)
   if (st.solids && scene.textures.exists('cat-dead')) {
     const corpse = st.solids.create(st.px, st.py, 'cat-dead');
     corpse.setScale(PLAYER_SCALE).setOrigin(0.5, 1).setDepth(D_WORLD - 2).setTint(0xd9b8b4);
     corpse.refreshBody();
-    const cbody = corpse.body;
-    cbody.setSize(58, 18);
-    cbody.position.x = st.px - 29;
-    cbody.position.y = st.py - 18;
-    if (cbody.updateCenter) cbody.updateCenter();
+    corpse.body.enable = false;
     st.debris.push(corpse);
   }
 

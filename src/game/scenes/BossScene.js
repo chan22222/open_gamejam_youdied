@@ -95,6 +95,7 @@ export class BossScene extends Phaser.Scene {
     const entryPhase = Phaser.Math.Clamp(rs.bossPhase || 0, 0, 4);
 
     audio.setStage('boss');
+    store.set('display', 100); // 보스전은 원래 화면 크기에서 시작 — 줌아웃 잔상 방지
     emit(EV.BOSS, { phase: 'corrupt' }); // HUD RGB 분리 글리치 — 관리자의 존재감
 
     this.cameras.main.setBackgroundColor('#05070c');
@@ -1232,8 +1233,8 @@ export class BossScene extends Phaser.Scene {
     const beam = this.add.rectangle(this.bossRoot.x, 270, 70, 2000, 0xffe9ec)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(96)
-      .setAlpha(0.95)
-      .setScaleX(0.15);
+      .setAlpha(0.95);
+    beam.scaleX = 0.15; // setScaleX는 Phaser에 없다 — 프로퍼티로 지정
     this.tweens.add({ targets: beam, scaleX: 44, duration: 300, ease: 'Expo.easeIn' });
     const white = this.add.rectangle(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 2600, 1600, 0xfff4f4)
       .setScrollFactor(0)
