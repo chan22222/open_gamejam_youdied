@@ -259,24 +259,9 @@ export class Stage1Scene extends Phaser.Scene {
   // -------------------------------------------------------------------------
 
   createSeekers() {
-    this.seekers = [
-      // 01: 지면의 장거리 순찰자 — 느리고 성실하다. 경로 끝에서 오래 멈춰 '듣는다'.
-      this.makeSeeker({
-        x: 760, y: 600, minX: 700, maxX: 1150, speed: 42,
-        endPause: 1400, midPause: false, label: 'LISTENER_01',
-      }),
-      // 02: 테라스의 신경질적 순찰자 — 빠르고, 예고 없이 멈춰 선다.
-      this.makeSeeker({
-        x: 1700, y: 520, minX: 1400, maxX: 1820, speed: 66,
-        endPause: 550, midPause: true, label: 'LISTENER_02',
-      }),
-    ];
-
-    for (const sk of this.seekers) {
-      this.add.text((sk.cfg.minX + sk.cfg.maxX) / 2, sk.cfg.y - 128, sk.cfg.label, {
-        fontFamily: 'monospace', fontSize: '10px', color: '#d96b72', letterSpacing: 2,
-      }).setOrigin(0.5).setDepth(29).setAlpha(0.65);
-    }
+    // 감시자 제거 — 이 정원은 볼륨 설정 체험과 통행만 남는다.
+    // (모든 소비처가 this.seekers 배열을 순회하므로 빈 배열이면 전부 무해한 no-op)
+    this.seekers = [];
   }
 
   makeSeeker(cfg) {
