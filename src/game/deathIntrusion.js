@@ -112,6 +112,17 @@ export function triggerDeathIntrusion(scene, cause) {
   if (scene.__dying || scene.__truce) return;
   if (scene.__intrusion && !scene.__intrusion.done) return;
 
+  // 이전 침입의 잔해(글자 발판/버튼)는 걷어낸다 — 겹쳐 쌓이면 밀 수 없게 된다.
+  if (scene.__intrusion && scene.__intrusion.done) {
+    const prev = scene.__intrusion;
+    (prev.debris || []).forEach((obj) => {
+      if (obj && obj.active && obj.destroy) obj.destroy();
+    });
+    if (prev.solids && prev.solids.destroy) prev.solids.destroy(true);
+    if (prev.buttons && prev.buttons.destroy) prev.buttons.destroy(true);
+    scene.__intrusion = null;
+  }
+
   const cfg = causeConfig(cause);
   const runState = getRunState(scene);
   runState.deaths += 1;
@@ -341,7 +352,17 @@ function spawnIntrusionWorld(scene, st) {
     .filter((g) => g && g !== st.solids);
   if (scene.player) {
     scene.physics.add.collider(scene.player, st.solids);
-    scene.physics.add.collider(scene.player, st.buttons);
+    // 공중에서 몸으로 치면 버튼이 날아간다 — 끼임 방지
+    scene.physics.add.collider(scene.player, st.buttons, (playerObj, btn) => {
+      const pb = playerObj.body;
+      if (!pb || !btn.body) return;
+      const airborne = !pb.blocked.down && !pb.touching.down;
+      if (airborne || Math.abs(pb.velocity.y) > 60) {
+        const dir = btn.x >= playerObj.x ? 1 : -1;
+        btn.setVelocity(dir * 320, -250);
+        safeSfx('ui');
+      }
+    });
   }
   scene.physics.add.collider(st.buttons, st.solids);
   scene.physics.add.collider(st.buttons, st.buttons);
@@ -413,7 +434,7 @@ function makeIntrusionButton(scene, st, x, y, wear) {
   const btn = scene.physics.add.sprite(x, y, key);
   btn.setDepth(D_WORLD + 1).setPushable(true);
   btn.body.setSize(BTN_W - 6, BTN_H - 10).setOffset(3, 5);
-  btn.setDragX(1500).setMaxVelocity(240, 980).setBounce(0);
+  btn.setDragX(1500).setMaxVelocity(420, 980).setBounce(0.15);
   btn.setCollideWorldBounds(true);
   st.buttons.add(btn);
   st.debris.push(btn);
