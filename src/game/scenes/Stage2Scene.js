@@ -123,6 +123,7 @@ export class Stage2Scene extends Phaser.Scene {
     this.voidCover.setAlpha(this.voidRevealed ? 0 : 1);
     // 카메라도 프레임에 갇힌다 — DISPLAY를 써야 세계가 넓어진다.
     if (!this.voidRevealed) this.cameras.main.setBounds(0, 0, FRAME_RIGHT + 4, 540);
+    else this.openFrameBoundary();
 
     this.bindStoreEffects();
     this.emitStatus();
@@ -135,22 +136,22 @@ export class Stage2Scene extends Phaser.Scene {
   spawnPoint() {
     // 체크포인트는 프레임을 지운(=협곡을 건널 수 있는) 런에서만 유효.
     // RESTART 시 registry의 체크포인트 키가 남아도 erased.FRAME이 false라 무시된다.
-    if (this.registry.get(CHECKPOINT_KEY) && this.runState.erased.FRAME) return CHECKPOINT_SPAWN;
+    if (this.registry.get(CHECKPOINT_KEY)) return CHECKPOINT_SPAWN;
     return BASE_SPAWN;
   }
 
   emitStatus() {
     const rs = this.runState;
     const dashKey = store.getState().bindings.dash;
-    const rule = rs.erased.FRAME ? 'THE FRAME = ______' : 'THE FRAME = DEATH';
+    const rule = this.voidRevealed ? 'THE FRAME = ______' : 'THE FRAME = WALL';
     let objective;
     let hint;
 
-    if (!rs.erased.FRAME) {
-      objective = '프레임의 끝으로 가라.';
-    } else if (!rs.dashFound) {
-      objective = '바깥의 발판을 들여라.';
+    if (!this.voidRevealed) {
+      objective = '오른쪽은 렌더되지 않았다.';
       hint = 'ESC → DISPLAY ↓';
+    } else if (!rs.dashFound) {
+      objective = '협곡을 건너라.';
     } else if (!dashKey) {
       objective = '대시 키를 바인딩하라.';
       hint = 'ESC → CONTROLS';
@@ -223,8 +224,6 @@ export class Stage2Scene extends Phaser.Scene {
     this.add.rectangle(480, 770, 960, 460, 0x0a141a).setDepth(-6); // 공허 위의 기둥 단면
 
 
-    // 낙서 (서사 = 한국어 세리프, 시스템 = 영문 모노)
-    this.addGraffiti(430, 420, '"화면은 벽이 아니다. 값이다"', { size: 16, color: '#8fae9b', angle: -1.5 });
     this.add.text(858, 468, 'RENDER BOUNDARY >>', {
       fontFamily: 'monospace', fontSize: '10px', color: '#5f8f96', letterSpacing: 2,
     }).setOrigin(0.5).setAlpha(0.8).setDepth(15);
@@ -247,6 +246,9 @@ export class Stage2Scene extends Phaser.Scene {
     const width = CANYON_PIT.right - CANYON_PIT.left;
     createStaticPlatform(this, this.solids, midX, CANYON_PIT.top + 20, width, 40, 'earth', 0x5d707c);
     this.add.rectangle(midX, 900, width, 330, 0x0a1218).setDepth(-6);
+
+    // 경계 바로 너머 착지 발판 — 프레임을 넘자마자 가시 구덩이로 떨어지지 않게
+    createStaticPlatform(this, this.solids, 1015, 520, 130, 40, 'earth', 0x5d707c);
 
     // 협곡 벽 밀폐(하부 빈 공간 차단) + 탈출 선반 — 바닥에서 직접 오를 수 있는 106px
     createStaticPlatform(this, this.solids, 949, 628, 22, 176, 'earth', 0x46545e);
@@ -357,15 +359,11 @@ export class Stage2Scene extends Phaser.Scene {
   // -------------------------------------------------------------------------
 
   createFrameBoundary() {
-    this.frameCracked = Boolean(this.runState.erased.FRAME);
-    if (this.frameCracked) {
-      this.addFrameCracks();
-      return;
-    }
-    // 오른쪽 경계 전체를 덮는 사망 존
-    this.barrier = this.add.zone(FRAME_RIGHT + 4, FRAME.y + FRAME.h / 2, 12, FRAME.h + 20);
+    // 경계는 죽는 벽이 아니다 — 닿아도 막힐 뿐. DISPLAY를 줄이면 열린다.
+    this.frameCracked = false;
+    this.barrier = this.add.zone(FRAME_RIGHT + 10, FRAME.y + FRAME.h / 2, 20, FRAME.h + 600);
     this.physics.add.existing(this.barrier, true);
-    this.physics.add.overlap(this.player, this.barrier, () => this.onBoundaryTouched());
+    this.physics.add.collider(this.player, this.barrier);
 
     // 경계를 따라 튀는 상시 정전기
     this.sparkTimer = this.time.addEvent({
@@ -373,6 +371,17 @@ export class Stage2Scene extends Phaser.Scene {
       loop: true,
       callback: () => this.spawnBorderSpark(),
     });
+  }
+
+  openFrameBoundary() {
+    if (this.frameCracked) return;
+    this.frameCracked = true;
+    if (this.barrier && this.barrier.body) this.barrier.body.enable = false;
+    if (this.sparkTimer) {
+      this.sparkTimer.remove();
+      this.sparkTimer = null;
+    }
+    this.addFrameCracks();
   }
 
   spawnBorderSpark() {
@@ -433,6 +442,9 @@ export class Stage2Scene extends Phaser.Scene {
       flicker.remove();
       bolts.destroy();
       this.player.clearTint();
+      // 사망 관성으로 벽을 뚫고 넘어가지 않게 — 반드시 프레임 안쪽에서 죽고, 안쪽에서 일어난다
+      this.player.setPosition(Math.min(this.player.x, FRAME_RIGHT - 44), this.player.y);
+      this.player.setVelocity(0, 0);
       killPlayer(this, 'FRAME');
       // PATCH2: 사망이 씬을 재시작하지 않는다 — 잡기 연출 락을 해제해야
       // 침입 기상 후 update()가 다시 돈다 (이후는 __dying/__truce가 가드).
@@ -476,7 +488,6 @@ export class Stage2Scene extends Phaser.Scene {
     this.add.text(FRAME_RIGHT + 30, 366, 'BOUNDARY // VOID', {
       fontFamily: 'monospace', fontSize: '9px', color: '#3f7c86', letterSpacing: 2,
     }).setOrigin(0, 0.5).setAlpha(0.7).setDepth(61);
-    this.addGraffiti(896, 306, '경계는 값이었다', { size: 12, color: '#6f958f', alpha: 0.75, angle: -2 });
   }
 
   drawCrack(g, x1, y1, x2, y2, jitter) {
@@ -808,20 +819,11 @@ export class Stage2Scene extends Phaser.Scene {
     if (!this.voidRevealed && (effective('display') <= 70 || this.player.x > FRAME_RIGHT)) {
       this.voidRevealed = true;
       this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H); // 카메라 해방
+      this.openFrameBoundary(); // 벽도 열린다
       this.tweens.add({ targets: this.voidCover, alpha: 0, duration: 900, ease: 'Sine.easeInOut' });
+      this.emitStatus();
     }
 
-    // PATCH2: 사망이 씬을 재시작하지 않는다 — in-scene 삭제에 실시간 반응
-    if (!this.frameCracked && this.runState.erased.FRAME) {
-      this.frameCracked = true;
-      if (this.sparkTimer) {
-        this.sparkTimer.remove();
-        this.sparkTimer = null;
-      }
-      if (this.barrier && this.barrier.body) this.barrier.body.enable = false;
-      this.addFrameCracks();
-      this.time.delayedCall(2600, () => this.emitStatus());
-    }
 
     if (this.__dying || this.zapLock || this.transitionLocked || !this.player) {
       if (this.holdArc) this.holdArc.clear();

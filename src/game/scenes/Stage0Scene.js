@@ -108,9 +108,7 @@ export class Stage0Scene extends Phaser.Scene {
     });
 
     // --- HUD 상태
-    this.baseObjective = this.erasedDarkness
-      ? 'ESC — 밝기를 되찾아라'
-      : 'LOCKED // 문이 응답하지 않는다';
+    this.baseObjective = '문을 찾아라.';
     this.currentObjective = this.baseObjective;
 
     // --- 밝기 반응 (방 공개 플래시 + 문 실체화 상태 전환)
@@ -347,22 +345,12 @@ export class Stage0Scene extends Phaser.Scene {
   createGraffiti() {
     // 낙서는 어둠 위(depth 91)에 둔다 — 암흑에서도 간신히 읽힌다.
     const mainAlpha = this.erasedDarkness ? 0.92 : 0.15;
-    this.add.text(330, 356, 'ESC — 빛은 메뉴 안에 있다', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '21px',
-      fontStyle: 'italic',
+    this.add.text(330, 356, 'ESC → BRIGHTNESS', {
+      fontFamily: 'monospace',
+      fontSize: '17px',
       color: '#d9d2c1',
-    }).setOrigin(0.5).setDepth(91).setAngle(-1.5).setAlpha(mainAlpha);
-    const scratch = this.add.graphics().setDepth(91).setAlpha(mainAlpha * 0.6);
-    scratch.lineStyle(1, 0xd9d2c1, 0.7);
-    scratch.lineBetween(232, 372, 424, 375);
-
-    this.add.text(590, 424, '어둠이 가시를 숨긴다', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '13px',
-      fontStyle: 'italic',
-      color: '#8d9c94',
-    }).setOrigin(0.5).setDepth(91).setAngle(2).setAlpha(this.erasedDarkness ? 0.6 : 0.13);
+      letterSpacing: 2,
+    }).setOrigin(0.5).setDepth(91).setAngle(-1.5).setAlpha(Math.max(mainAlpha, 0.5));
   }
 
   // -------------------------------------------------------------------------
@@ -399,7 +387,7 @@ export class Stage0Scene extends Phaser.Scene {
       this.currentObjective = 'EXIT MATERIALIZED // 문 앞에서 홀드';
       if (!first && !this.leaving && !this.__dying && !this.__truce) {
         this.cameras.main.shake(120, 0.0018);
-        this.pushState({ hint: '문이 벽에서 걸어 나왔다.' });
+        this.pushState({ hint: '문이 나타났다.' });
       }
     } else {
       this.doorGlow.setAlpha(0);
@@ -495,8 +483,7 @@ export class Stage0Scene extends Phaser.Scene {
       duration: 90,
       yoyo: true,
     });
-    this.floatText(GATE_X, FLOOR_TOP - 170, 'ACCESS DENIED', '#ef4d5b');
-    this.floatText(GATE_X, FLOOR_TOP - 154, '권한이 없습니다', '#8d9c94');
+    this.floatText(GATE_X, FLOOR_TOP - 170, 'LOCKED', '#ef4d5b');
   }
 
   updateDoor(delta) {

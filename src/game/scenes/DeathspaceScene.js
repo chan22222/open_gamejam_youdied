@@ -104,7 +104,7 @@ const FINAL_CAUSE = {
   permission: null,
   accent: 0xe9e2d2,
   accentCss: '#e9e2d2',
-  koSign: '이것이 예정된 죽음이었다.',
+  koSign: 'FINAL RECORD',
   objective: '탑을 올라 DIED를 지워라.',
   hint: null,
   ruleBefore: 'YOU = DIED?',
@@ -663,7 +663,7 @@ export class DeathspaceScene extends Phaser.Scene {
       duration: 2100, repeat: -1, ease: 'Sine.easeOut',
     });
 
-    this.add.text(x, footY - 78, '방금의 너', {
+    this.add.text(x, footY - 78, '', {
       fontFamily: 'Georgia, serif', fontSize: '11px', color: '#8d6a6a',
     }).setOrigin(0.5).setDepth(19).setAlpha(0.85);
   }
@@ -820,8 +820,6 @@ export class DeathspaceScene extends Phaser.Scene {
     this.makeButton(600, 2050, 1);
     this.makeButton(760, 2050, 4);
 
-    // 낙서
-    this.graffiti(480, 560, '"물음표만 남겨라"', '#b09a6d', 13);
   }
 
   // -------------------------------------------------------------------------

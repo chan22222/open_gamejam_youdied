@@ -346,7 +346,7 @@ export class EndingScene extends Phaser.Scene {
   showStats() {
     const nn = String(this.deaths).padStart(2, '0');
     const line1 = `DEATHS: ${nn}`;
-    const line2 = `${koCount(this.deaths)} 번의 건축.`;
+    const line2 = '';
 
     const t1 = this.add.text(VIEW_WIDTH / 2, 132, '', {
       fontFamily: 'monospace',

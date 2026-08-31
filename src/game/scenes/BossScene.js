@@ -40,7 +40,7 @@ const HOMER_SPEED = 145;
 const LIGHT_RADIUS = 170; // 패널 광원 반경 (화면 px)
 const BREAKER_HOLD_MS = 1150;
 const HINT_SHIELD = '설정 창을 드래그해 막아라';
-const HINT_LIGHT = '설정 창이 광원이다 — 브레이커로';
+const HINT_LIGHT = '설정 창으로 비추며 브레이커로';
 
 // interact가 리바인딩됐을 수 있으므로 키 안내 문구는 현재 바인딩을 읽어 조합한다.
 function interactKeyName() {
@@ -201,9 +201,6 @@ export class BossScene extends Phaser.Scene {
     this.add.text(320, 462, 'ADMIN SEES ALL', {
       fontFamily: 'monospace', fontSize: '13px', color: '#67d0c8', letterSpacing: 4,
     }).setOrigin(0.5).setAlpha(0.14).setDepth(3).setAngle(-2);
-    this.add.text(1060, 452, '설정은 너의 것이 아니다', {
-      fontFamily: 'Georgia, serif', fontSize: '14px', color: '#c98a92',
-    }).setOrigin(0.5).setAlpha(0.16).setDepth(3).setAngle(1.5);
 
     // 지형
     this.platforms = this.physics.add.staticGroup();
@@ -1167,7 +1164,7 @@ export class BossScene extends Phaser.Scene {
     this.time.delayedCall(sayDelay, () => {
       if (this.__dying) return;
       // 죽기 직전 대사
-      this.bossSay('설정할 수 없는 것이 하나 남았다.', () => this.chargeBeam(reentry));
+      this.bossSay('FINAL DIRECTIVE.', () => this.chargeBeam(reentry));
     });
   }
 

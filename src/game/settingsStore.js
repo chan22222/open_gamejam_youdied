@@ -21,9 +21,9 @@ const SETTABLE_KEYS = new Set([
 
 function defaultState() {
   return {
-    // 밝기/음량은 처음부터 사용 가능 — 1·2스테이지는 설정 퍼즐만으로 진행.
-    // 죽음 해금(display/shake)은 3번째 맵부터.
-    unlocked: { brightness: true, volume: true, display: false, shake: false, controls: false },
+    // 밝기/음량/화면은 처음부터 사용 가능 — 설정 퍼즐은 죽음 없이 체험한다.
+    // 죽음 해금(shake)은 3번째 맵의 가시부터.
+    unlocked: { brightness: true, volume: true, display: true, shake: false, controls: false },
     brightness: SETTING_LIMITS.brightness.def,
     volume: SETTING_LIMITS.volume.def,
     display: SETTING_LIMITS.display.def,

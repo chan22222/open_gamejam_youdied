@@ -114,8 +114,8 @@ export class BootScene extends Phaser.Scene {
     emitState({
       mode: 'title',
       chapter: 'ESC/APE // BOOT',
-      objective: '죽어라. 그래야 열린다.',
-      rule: 'NO PERMISSIONS',
+      objective: 'RUN을 눌러 시작.',
+      rule: 'SYSTEM READY',
       deaths: 0,
     });
 
@@ -140,9 +140,11 @@ export class BootScene extends Phaser.Scene {
       const saved = loadProgress();
       if (saved) {
         applySavedSettings(saved);
-        const restored = { ...defaultRunState(), ...saved.runState, started: true };
+        // 해당 스테이지를 처음부터 — 시체/체크포인트/보스 페이즈는 복원하지 않는다.
+        const restored = { ...defaultRunState(), ...saved.runState, started: true, bossPhase: 0 };
         this.registry.set('runState', restored);
-        this.registry.set('corpses', Array.isArray(saved.corpses) ? saved.corpses : []);
+        this.registry.set('corpses', []);
+        this.registry.set('stage2Checkpoint', false);
         this.cameras.main.flash(240, 101, 218, 213);
         this.bootLabel.setText('SESSION RESTORED');
         this.time.delayedCall(260, () => this.scene.start(restored.stage || 'Stage0Scene'));

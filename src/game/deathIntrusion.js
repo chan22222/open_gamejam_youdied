@@ -353,9 +353,21 @@ function spawnIntrusionWorld(scene, st) {
       if (!pb || !btn.body) return;
       const airborne = !pb.blocked.down && !pb.touching.down;
       if (airborne && Math.abs(pb.velocity.y) > 160) {
-        const dir = btn.x >= playerObj.x ? 1 : -1;
-        btn.setVelocity(dir * 140, -130);
-        safeSfx('ui');
+        const now = scene.time.now;
+        if (now - (btn.__stompAt || 0) < 350) return; // 연속 접촉 프레임 중복 방지
+        btn.__stompAt = now;
+        btn.__stomps = (btn.__stomps || 0) + 1;
+        if (btn.__stomps >= 2) {
+          // 두 번째 밟기부터 튕겨 나간다
+          btn.__stomps = 0;
+          const dir = btn.x >= playerObj.x ? 1 : -1;
+          btn.setVelocity(dir * 140, -130);
+          safeSfx('ui');
+        } else {
+          // 첫 밟기: 눌리는 반응만
+          scene.tweens.add({ targets: btn, scaleY: 0.86, duration: 70, yoyo: true });
+          safeSfx('type');
+        }
       }
     });
   }

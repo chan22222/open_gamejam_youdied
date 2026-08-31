@@ -233,13 +233,10 @@ export class Stage1Scene extends Phaser.Scene {
       color: '#9db8a8',
       fontStyle: 'italic',
     };
-    const g1 = this.add.text(390, 538, '그것은 눈이 없다. 귀뿐이다', style)
+    const g1 = this.add.text(390, 538, 'ESC → VOLUME 0', style)
       .setOrigin(0.5).setDepth(9).setAlpha(0.78).setAngle(-1.5)
       .setShadow(0, 2, '#04100c', 5, true, true);
-    const g2 = this.add.text(1350, 458, '침묵도 설정이다', style)
-      .setOrigin(0.5).setDepth(9).setAlpha(0.72).setAngle(1.2)
-      .setShadow(0, 2, '#04100c', 5, true, true);
-    for (const g of [g1, g2]) {
+    for (const g of [g1]) {
       this.tweens.add({
         targets: g,
         alpha: { from: g.alpha, to: g.alpha - 0.25 },
@@ -259,9 +256,24 @@ export class Stage1Scene extends Phaser.Scene {
   // -------------------------------------------------------------------------
 
   createSeekers() {
-    // 감시자 제거 — 이 정원은 볼륨 설정 체험과 통행만 남는다.
-    // (모든 소비처가 this.seekers 배열을 순회하므로 빈 배열이면 전부 무해한 no-op)
-    this.seekers = [];
+    this.seekers = [
+      // 01: 지면의 장거리 순찰자
+      this.makeSeeker({
+        x: 760, y: 600, minX: 700, maxX: 1150, speed: 42,
+        endPause: 1400, midPause: false, label: 'LISTENER_01',
+      }),
+      // 02: 테라스의 순찰자
+      this.makeSeeker({
+        x: 1700, y: 520, minX: 1400, maxX: 1820, speed: 66,
+        endPause: 550, midPause: true, label: 'LISTENER_02',
+      }),
+    ];
+
+    for (const sk of this.seekers) {
+      this.add.text((sk.cfg.minX + sk.cfg.maxX) / 2, sk.cfg.y - 128, sk.cfg.label, {
+        fontFamily: 'monospace', fontSize: '10px', color: '#d96b72', letterSpacing: 2,
+      }).setOrigin(0.5).setDepth(29).setAlpha(0.65);
+    }
   }
 
   makeSeeker(cfg) {

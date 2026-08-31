@@ -326,7 +326,6 @@ export default function App() {
                   <kbd>ESC</kbd>설정
                 </span>
               </div>
-              <small>NO PERMISSIONS — 죽음으로 증명하라.</small>
             </div>
           )}
 
@@ -335,9 +334,7 @@ export default function App() {
               <span className="ending-eyebrow">RUN ARCHIVED — YOU.</span>
               <div className="ending-stat">
                 <strong>DEATHS: {String(ui.deaths ?? 0).padStart(2, '0')}</strong>
-                <em>— {koBuilds(ui.deaths ?? 0)}의 건축.</em>
               </div>
-              <p>당신은 실패하지 않았다. 실패를 쌓아 올렸다.</p>
               <button type="button" className="primary-action" onClick={restartGame}>
                 <span>REWRITE AGAIN</span>
                 <i>→</i>
