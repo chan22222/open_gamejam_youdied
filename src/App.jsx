@@ -3,6 +3,7 @@ import { createGame } from './game/createGame.js';
 import { EV, emit, on } from './game/events.js';
 import { store, effective } from './game/settingsStore.js';
 import { audio } from './game/audio.js';
+import { hasSave } from './game/persistence.js';
 import SettingsPanel from './ui/SettingsPanel.jsx';
 
 // ---------------------------------------------------------------------------
@@ -49,6 +50,7 @@ export default function App() {
   const [ui, setUi] = useState(INITIAL_UI);
   const [shell, setShell] = useState(readShell);
   const [launching, setLaunching] = useState(false);
+  const [canContinue, setCanContinue] = useState(() => hasSave());
   const [hitSeq, setHitSeq] = useState(0);
   const [bossFx, setBossFx] = useState(null); // null | 'corrupt' | 'shatter' | 'restored'
   const [staticOn, setStaticOn] = useState(false);
@@ -175,13 +177,21 @@ export default function App() {
     };
   }, [ui.hint]);
 
+  // 타이틀로 돌아올 때마다 저장 존재 여부 재확인 (RESTART 경로)
+  useEffect(() => {
+    if (ui.mode === 'title') {
+      setCanContinue(hasSave());
+      setLaunching(false);
+    }
+  }, [ui.mode]);
+
   // --- 액션 ------------------------------------------------------------------
-  const startGame = () => {
+  const startGame = (mode) => {
     if (launching) return;
     setLaunching(true);
     audio.init();
     audio.sfx('ui');
-    emit(EV.START);
+    emit(EV.START, { mode });
   };
 
   const restartGame = () => {
@@ -289,10 +299,22 @@ export default function App() {
                   <span className="logo-cap">E</span>
                 </span>
               </h1>
-              <button type="button" className="primary-action" onClick={startGame} disabled={launching}>
-                <span>{launching ? 'LOADING...' : 'RUN'}</span>
-                <i>→</i>
-              </button>
+              <div className="title-actions">
+                <button type="button" className="primary-action" onClick={() => startGame('new')} disabled={launching}>
+                  <span>{launching ? 'LOADING...' : '새로 시작'}</span>
+                  <i>→</i>
+                </button>
+                {canContinue && (
+                  <button
+                    type="button"
+                    className="primary-action is-ghost"
+                    onClick={() => startGame('continue')}
+                    disabled={launching}
+                  >
+                    <span>이어하기</span>
+                  </button>
+                )}
+              </div>
               <div className="title-controls" aria-label="조작 안내">
                 <span className="tc">
                   <kbd>A/D</kbd>이동

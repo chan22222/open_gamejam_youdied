@@ -304,36 +304,7 @@ function spawnIntrusionWorld(scene, st) {
 
   st.solids = scene.physics.add.staticGroup();
   st.buttons = scene.physics.add.group();
-
-  // --- YOU DIED 글자 발판 3개 (정적, 월드 경계 클램프) ---
-  const letters = [
-    ['D', baseX - 120 * m, baseY - 58],
-    ['I', baseX + 35 * m, baseY - 118],
-    ['E', baseX + 190 * m, baseY - 62],
-  ];
-  letters.forEach(([ch, rawX, rawY], i) => {
-    const lx = Phaser.Math.Clamp(rawX, wb.x + 50, wb.right - 50);
-    const ly = Phaser.Math.Clamp(rawY, wb.y + 60, wb.bottom - 40);
-    const glyph = scene.add.text(lx, ly - 4, ch, {
-      fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '58px', fontStyle: 'bold',
-      color: i % 2 ? '#bdb5a5' : '#ddd5c4',
-      stroke: '#272326', strokeThickness: 2,
-    }).setOrigin(0.5, 0).setDepth(D_WORLD).setShadow(0, 8, '#000000', 10, true, true);
-    const slab = st.solids.create(lx, ly, 'death-stone');
-    slab.setDisplaySize(Math.max(56, glyph.width + 14), 14).setDepth(D_WORLD - 1);
-    slab.refreshBody();
-    glyph.setAlpha(0);
-    slab.setAlpha(0);
-    const fromY = glyph.y;
-    glyph.setY(fromY - 26);
-    scene.tweens.add({
-      targets: glyph, alpha: 1, y: fromY,
-      delay: 120 + i * 90, duration: 320, ease: 'Back.easeOut',
-    });
-    scene.tweens.add({ targets: slab, alpha: 1, delay: 120 + i * 90, duration: 300 });
-    st.debris.push(glyph, slab);
-  });
+  // (글자 발판 없음 — 월드에 남는 침입물은 RETRY 버튼뿐이다)
 
   // --- RETRY 버튼 (pushable) — 사망 횟수만큼, 최대 3 ---
   const count = Math.min(st.deaths, 3);
@@ -368,38 +339,9 @@ function spawnIntrusionWorld(scene, st) {
   scene.physics.add.collider(st.buttons, st.buttons);
   terrain.forEach((g) => scene.physics.add.collider(st.buttons, g));
 
-  // --- KILLED BY: <WORD> — 단어만 금색 부유 ---
-  const wx = Phaser.Math.Clamp(baseX + 35 * m, wb.x + 80, wb.right - 80);
-  const wy = Phaser.Math.Clamp(baseY - WORD_RAISE, wb.y + 70, wb.bottom - 60);
-  st.wordBaseX = wx;
-  st.wordBaseY = wy;
-  st.word = scene.add.text(wx, wy - 70, st.cfg.word, {
-    fontFamily: 'Georgia, "Times New Roman", serif',
-    fontSize: '44px', fontStyle: 'bold',
-    color: '#e4b65a', stroke: '#3a2c14', strokeThickness: 3,
-  }).setOrigin(0.5).setDepth(D_WORD).setShadow(0, 6, '#000000', 10, true, true).setAlpha(0);
-
-  st.wordGlow = scene.add.image(wx, wy, 'glow-orb')
-    .setBlendMode(Phaser.BlendModes.ADD)
-    .setTint(0xe4b65a)
-    .setScale(Math.max(3, st.word.width / 44), 1.6)
-    .setAlpha(0)
-    .setDepth(D_WORD - 1);
-
-  // 단어가 내려앉은 뒤 스스로 붕괴한다 — 죽음 자체가 해금이다 (한 판에 하나).
-  scene.tweens.add({
-    targets: st.word, alpha: 1, y: wy, delay: 420, duration: 460, ease: 'Bounce.easeOut',
-    onComplete: () => {
-      if (st.dead) return;
-      glitchBurst(scene, st, st.word.getBounds(), 10);
-      safeSfx('ui');
-      scene.tweens.add({
-        targets: st.wordGlow, alpha: { from: 0.12, to: 0.28 },
-        duration: 550, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-      });
-      delay(scene, st, 620, () => performErase(scene, st));
-    },
-  });
+  // 단어/글자 침입물 없음 — 월드에 남는 것은 RETRY 버튼뿐.
+  // 죽음 자체가 해금이다 (한 판에 하나): 잠시 뒤 규칙이 스스로 붕괴한다.
+  delay(scene, st, 900, () => performErase(scene, st));
 
   // --- 이펙트 도구 ---
   if (scene.textures.exists('white-pixel')) {
@@ -552,17 +494,20 @@ function performErase(scene, st) {
   if (st.prompt) st.prompt.setVisible(false);
   if (scene.player && scene.player.body && scene.player.body.enable) scene.player.setVelocityX(0);
 
-  // 글자가 픽셀 단위로 흩어진다
-  const b = st.word.getBounds();
-  if (st.scatterEmitter) {
-    for (let sx = b.x; sx < b.x + b.width; sx += 7) {
-      for (let sy = b.y; sy < b.y + b.height; sy += 7) {
-        if (Math.random() < 0.55) st.scatterEmitter.emitParticleAt(sx, sy, 1);
-      }
+  // 붕괴 이펙트 — 플레이어 머리 위에서 짧게 흩어진다
+  if (st.scatterEmitter && scene.player) {
+    for (let i = 0; i < 26; i += 1) {
+      st.scatterEmitter.emitParticleAt(
+        scene.player.x + Phaser.Math.Between(-60, 60),
+        scene.player.y - 60 + Phaser.Math.Between(-30, 30),
+        1,
+      );
     }
   }
-  scene.tweens.killTweensOf(st.word);
-  st.word.setVisible(false);
+  if (st.word) {
+    scene.tweens.killTweensOf(st.word);
+    st.word.setVisible(false);
+  }
   if (st.wordGlow) {
     scene.tweens.killTweensOf(st.wordGlow);
     scene.tweens.add({ targets: st.wordGlow, alpha: 0, duration: 350 });
@@ -590,12 +535,6 @@ function performErase(scene, st) {
     deaths: st.deaths,
     hint: st.cfg.afterHint || undefined,
   });
-
-  // 흉터 — 빈칸이 남는다
-  const scar = scene.add.text(st.wordBaseX, st.wordBaseY, '______', {
-    fontFamily: 'monospace', fontSize: '28px', color: '#d9d2c1', letterSpacing: 3,
-  }).setOrigin(0.5).setDepth(D_WORD).setAlpha(0.3);
-  st.debris.push(scar);
 
   if (freshUnlock) delay(scene, st, 420, () => showUnlockBanner(scene, st));
   delay(scene, st, freshUnlock ? 2100 : 800, () => dissolve(scene, st));

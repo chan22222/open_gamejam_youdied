@@ -4,6 +4,7 @@
 
 import Phaser from 'phaser';
 import { EV, emitState, on } from '../events.js';
+import { applySavedSettings, clearSave, loadProgress } from '../persistence.js';
 import {
   VIEW_WIDTH,
   VIEW_HEIGHT,
@@ -28,7 +29,9 @@ export class BootScene extends Phaser.Scene {
     // create()에서야 구독하면 그 사이의 EV.START가 수신자 없이 소실되어
     // 셸이 'LOADING...' 상태로 영구 고정된다 — init에서 즉시 구독하고,
     // 로드 완료 전에 수신하면 플래그로 보관했다가 create()에서 소비한다.
-    this.offStart = on(EV.START, () => {
+    this.startMode = 'new';
+    this.offStart = on(EV.START, (detail) => {
+      this.startMode = (detail && detail.mode) === 'continue' ? 'continue' : 'new';
       if (this.created) this.beginRun();
       else this.pendingStart = true;
     });
@@ -132,6 +135,22 @@ export class BootScene extends Phaser.Scene {
       this.offStart = null;
     }
 
+    // 이어하기 — 저장된 runState/시체/설정을 복원해 해당 스테이지로.
+    if (this.startMode === 'continue') {
+      const saved = loadProgress();
+      if (saved) {
+        applySavedSettings(saved);
+        const restored = { ...defaultRunState(), ...saved.runState, started: true };
+        this.registry.set('runState', restored);
+        this.registry.set('corpses', Array.isArray(saved.corpses) ? saved.corpses : []);
+        this.cameras.main.flash(240, 101, 218, 213);
+        this.bootLabel.setText('SESSION RESTORED');
+        this.time.delayedCall(260, () => this.scene.start(restored.stage || 'Stage0Scene'));
+        return;
+      }
+    }
+
+    clearSave(); // 새로시작 — 이전 저장 폐기
     const runState = this.registry.get('runState') || defaultRunState();
     runState.started = true;
     this.registry.set('runState', runState);

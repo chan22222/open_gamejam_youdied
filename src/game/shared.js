@@ -7,6 +7,7 @@ import { store, effective } from './settingsStore.js';
 import { audio } from './audio.js';
 import { addCorpse } from './corpses.js';
 import { emitState } from './events.js';
+import { saveProgress } from './persistence.js';
 // 순환 참조 주의: deathIntrusion은 이 모듈의 함수를 런타임에만 사용한다 (모듈 평가 시점 미사용 — 안전).
 import { triggerDeathIntrusion } from './deathIntrusion.js';
 
@@ -751,4 +752,6 @@ export function getRunState(scene) {
 
 export function saveRunState(scene, runState) {
   scene.registry.set('runState', runState);
+  // 진행 자동 저장 — 타이틀의 이어하기가 여기서 복원된다.
+  if (runState.started) saveProgress(runState, scene.registry.get('corpses') || []);
 }

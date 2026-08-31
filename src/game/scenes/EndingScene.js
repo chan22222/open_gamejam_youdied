@@ -8,6 +8,7 @@ import Phaser from 'phaser';
 import { emitState } from '../events.js';
 import { audio } from '../audio.js';
 import { store } from '../settingsStore.js';
+import { clearSave } from '../persistence.js';
 import { VIEW_WIDTH, VIEW_HEIGHT, addFloatingMote, getRunState } from '../shared.js';
 
 const WORLD_W = 1280;
@@ -46,6 +47,7 @@ export class EndingScene extends Phaser.Scene {
   create() {
     const runState = getRunState(this);
     this.deaths = runState.deaths;
+    clearSave(); // 런 완주 — 이어하기 저장 폐기
 
     // 시스템 상태 정리 — 관리자는 패배했고, 설정은 온전히 너의 것이다
     store.set('panelOpen', false);
