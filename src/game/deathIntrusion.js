@@ -352,9 +352,9 @@ function spawnIntrusionWorld(scene, st) {
       const pb = playerObj.body;
       if (!pb || !btn.body) return;
       const airborne = !pb.blocked.down && !pb.touching.down;
-      if (airborne && Math.abs(pb.velocity.y) > 120) {
+      if (airborne && Math.abs(pb.velocity.y) > 160) {
         const dir = btn.x >= playerObj.x ? 1 : -1;
-        btn.setVelocity(dir * 230, -190);
+        btn.setVelocity(dir * 140, -130);
         safeSfx('ui');
       }
     });
@@ -400,8 +400,9 @@ function makeIntrusionButton(scene, st, x, y, wear) {
   const btn = scene.physics.add.sprite(x, y, key);
   btn.setDepth(D_WORLD + 1).setPushable(true);
   btn.body.setSize(BTN_W - 6, BTN_H - 10).setOffset(3, 5);
-  // 최대 가로 속도 200 — 캐릭터(265)보다 느려서 밀 때 묵직하게 끌린다
-  btn.setDragX(1500).setMaxVelocity(200, 980).setBounce(0.05);
+  // 무겁고 느리게 — 질량으로 밀림 자체를 둔하게, 속도 상한은 캐릭터(265)의 절반 근처
+  btn.setDragX(1600).setMaxVelocity(140, 980).setBounce(0);
+  btn.body.setMass(4);
   btn.setCollideWorldBounds(true);
   st.buttons.add(btn);
   st.debris.push(btn);

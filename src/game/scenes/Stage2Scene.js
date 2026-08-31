@@ -113,6 +113,15 @@ export class Stage2Scene extends Phaser.Scene {
 
     this.holdArc = this.add.graphics().setDepth(80);
 
+    // DISPLAY를 쓰기 전에는 프레임 오른쪽 세계가 아예 보이지 않는다.
+    // 줌아웃(display<=70)하거나 실제로 경계를 넘는 순간 걷히고, 그 뒤로는 다시 덮이지 않는다.
+    this.voidCover = this.add.rectangle(
+      FRAME_RIGHT + (WORLD_W - FRAME_RIGHT) / 2 + 200, 500,
+      WORLD_W - FRAME_RIGHT + 500, 2200, 0x04070c,
+    ).setDepth(60);
+    this.voidRevealed = this.player.x > FRAME_RIGHT;
+    this.voidCover.setAlpha(this.voidRevealed ? 0 : 1);
+
     this.bindStoreEffects();
     this.emitStatus();
   }
@@ -791,6 +800,12 @@ export class Stage2Scene extends Phaser.Scene {
         this.moduleShards[i].setPosition(Math.cos(a) * 28, Math.sin(a) * 13);
         this.moduleShards[i].rotation = a;
       }
+    }
+
+    // 오른쪽 세계 공개 — DISPLAY 사용 또는 경계 통과 시 1회
+    if (!this.voidRevealed && (effective('display') <= 70 || this.player.x > FRAME_RIGHT)) {
+      this.voidRevealed = true;
+      this.tweens.add({ targets: this.voidCover, alpha: 0, duration: 900, ease: 'Sine.easeInOut' });
     }
 
     // PATCH2: 사망이 씬을 재시작하지 않는다 — in-scene 삭제에 실시간 반응
