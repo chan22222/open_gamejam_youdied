@@ -1,0 +1,874 @@
+/* ESC/APE — settings.css (A1 core-store)
+   시스템 설정 패널 전용 스타일. 다크 CRT 터미널 미학.
+   전역 오염 금지 — 모든 규칙은 .esc-panel / .esc-deny 네임스페이스 아래에만 존재한다. */
+
+.esc-panel,
+.esc-panel * {
+  box-sizing: border-box;
+}
+
+.esc-panel {
+  --esc-cyan: #65dad5;
+  --esc-cyan-dim: rgba(101, 218, 213, 0.28);
+  --esc-danger: #ef4d5b;
+  --esc-gold: #e4b65a;
+  --esc-ink: #d9e2df;
+  --esc-mute: #6f7a76;
+  --esc-line: rgba(101, 218, 213, 0.2);
+  /* 주의: fixed 금지 — .viewport-wrap의 filter가 containing block을 바꿔 좌표가 어긋난다.
+     absolute + offsetParent(.viewport-wrap 기준) 좌표계를 쓴다. */
+  position: absolute;
+  z-index: 150;
+  width: min(342px, calc(100vw - 16px));
+  color: var(--esc-ink);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background:
+    linear-gradient(to bottom, rgba(101, 218, 213, 0.045), rgba(101, 218, 213, 0) 90px),
+    #070b0c;
+  border: 1px solid rgba(101, 218, 213, 0.34);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    0 24px 70px rgba(0, 0, 0, 0.72),
+    0 0 36px rgba(101, 218, 213, 0.09),
+    inset 0 0 46px rgba(101, 218, 213, 0.04);
+  user-select: none;
+  -webkit-user-select: none;
+  isolation: isolate;
+  animation: esc-panel-in 360ms cubic-bezier(0.18, 1.25, 0.35, 1) both;
+}
+
+/* 패널 내부 스캔라인 — 바깥 CRT 프레임과 한 몸처럼 보이게 */
+.esc-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.17) 2px 3px,
+    transparent 3px 4px
+  );
+  opacity: 0.55;
+}
+
+/* 브라운관 잔광 비네트 + 미세한 플리커 */
+.esc-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background: radial-gradient(130% 105% at 50% 0%, transparent 58%, rgba(0, 0, 0, 0.3));
+  animation: esc-flicker 3.7s steps(2, end) infinite;
+}
+
+.esc-panel.esc-dragging {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    0 34px 90px rgba(0, 0, 0, 0.8),
+    0 0 48px rgba(101, 218, 213, 0.16),
+    inset 0 0 46px rgba(101, 218, 213, 0.05);
+}
+
+/* EV.PANEL_HIT — 피격 흔들림 (등장 애니메이션은 리스트 첫 항목으로 유지해 재생 방지) */
+.esc-panel.esc-hit {
+  animation:
+    esc-panel-in 360ms cubic-bezier(0.18, 1.25, 0.35, 1) both,
+    esc-hit-shake 340ms linear both;
+}
+
+/* ---- 타이틀바 ---- */
+
+.esc-titlebar {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 9px 9px 12px;
+  border-bottom: 1px solid var(--esc-line);
+  background: linear-gradient(to bottom, rgba(101, 218, 213, 0.11), rgba(101, 218, 213, 0.02));
+  cursor: grab;
+  touch-action: none;
+}
+
+.esc-panel.esc-dragging .esc-titlebar {
+  cursor: grabbing;
+}
+
+.esc-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--esc-cyan);
+  box-shadow: 0 0 9px var(--esc-cyan);
+  animation: esc-flicker 2.2s steps(2, end) infinite;
+}
+
+.esc-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: #a9e6e2;
+  text-shadow: 0 0 12px rgba(101, 218, 213, 0.4);
+  white-space: nowrap;
+}
+
+.esc-integrity {
+  flex: none;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--esc-gold);
+  text-shadow: 0 0 10px rgba(228, 182, 90, 0.4);
+}
+
+.esc-integrity[data-low] {
+  color: var(--esc-danger);
+  text-shadow: 0 0 10px rgba(239, 77, 91, 0.55);
+  animation: esc-blink 700ms steps(1) infinite;
+}
+
+.esc-close {
+  flex: none;
+  padding: 4px 5px;
+  border: 0;
+  background: transparent;
+  color: #7f8b87;
+  font: 600 10px/1 'JetBrains Mono', 'Courier New', monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.esc-close:hover {
+  color: var(--esc-danger);
+  text-shadow: 0 0 10px rgba(239, 77, 91, 0.6);
+}
+
+/* 내구도 게이지 — 타이틀바 바로 아래 얇은 선 */
+.esc-integrity-bar {
+  position: relative;
+  z-index: 8;
+  height: 2px;
+  background:
+    linear-gradient(
+      to right,
+      rgba(228, 182, 90, 0.9) 0 var(--esc-int, 100%),
+      rgba(239, 77, 91, 0.18) var(--esc-int, 100%) 100%
+    );
+  box-shadow: 0 0 8px rgba(228, 182, 90, 0.35);
+}
+
+/* ---- 탭 ---- */
+
+.esc-tabs {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  border-bottom: 1px solid var(--esc-line);
+}
+
+.esc-tabs button {
+  flex: 1;
+  padding: 9px 0 8px;
+  border: 0;
+  border-right: 1px solid rgba(101, 218, 213, 0.12);
+  background: transparent;
+  color: var(--esc-mute);
+  font: 600 9px/1 'JetBrains Mono', 'Courier New', monospace;
+  letter-spacing: 0.24em;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.esc-tabs button:last-child {
+  border-right: 0;
+}
+
+.esc-tabs button:hover {
+  color: #b9ece9;
+}
+
+.esc-tabs button.is-active {
+  color: var(--esc-cyan);
+  background: rgba(101, 218, 213, 0.07);
+  box-shadow: inset 0 -2px 0 var(--esc-cyan);
+  text-shadow: 0 0 12px rgba(101, 218, 213, 0.5);
+}
+
+/* ---- 본문 ---- */
+
+.esc-body {
+  position: relative;
+  z-index: 8;
+  max-height: min(52vh, 384px);
+  padding: 13px 13px 9px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(101, 218, 213, 0.35) transparent;
+}
+
+.esc-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.esc-body::-webkit-scrollbar-thumb {
+  background: rgba(101, 218, 213, 0.3);
+}
+
+.esc-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.esc-sect {
+  margin: 1px 1px 11px;
+  color: #4f5a56;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+}
+
+.esc-none {
+  margin: 18px 0 22px;
+  color: var(--esc-mute);
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+}
+
+/* ---- ACCESS DENIED — 권한 0개에서 ESC (0.9초 후 자동 닫힘) ---- */
+
+.esc-deny {
+  --esc-danger: #ef4d5b;
+  position: absolute;
+  inset: 0;
+  z-index: 160;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(239, 77, 91, 0.05) 0 2px,
+      transparent 2px 5px
+    ),
+    radial-gradient(120% 90% at 50% 50%, rgba(60, 4, 10, 0.5), rgba(0, 0, 0, 0.82));
+  animation: esc-deny-veil 900ms steps(1, end) both;
+}
+
+.esc-deny-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding: 22px clamp(22px, 6vw, 46px) 20px;
+  border: 1px solid rgba(239, 77, 91, 0.75);
+  background: linear-gradient(to bottom, rgba(38, 5, 9, 0.94), rgba(6, 3, 4, 0.94));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.9),
+    0 0 60px rgba(239, 77, 91, 0.28),
+    inset 0 0 40px rgba(239, 77, 91, 0.08);
+  animation: esc-deny-card 900ms cubic-bezier(0.16, 1.4, 0.3, 1) both;
+}
+
+.esc-deny-code {
+  position: relative;
+  color: #ffd9dc;
+  font-size: clamp(17px, 4.4vw, 27px);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-shadow: 0 0 22px rgba(239, 77, 91, 0.75);
+  animation: esc-denied 900ms steps(1, end) infinite;
+}
+
+/* RGB 스플릿 글리치 — 같은 글자를 시안/레드로 어긋나게 겹친다 */
+.esc-deny-code::before,
+.esc-deny-code::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.esc-deny-code::before {
+  color: var(--esc-cyan, #65dad5);
+  animation: esc-deny-split-a 260ms steps(2, end) infinite;
+}
+
+.esc-deny-code::after {
+  color: var(--esc-danger);
+  animation: esc-deny-split-b 310ms steps(2, end) infinite;
+}
+
+.esc-deny-meter {
+  width: 100%;
+  height: 2px;
+  background: rgba(239, 77, 91, 0.18);
+  box-shadow: 0 0 12px rgba(239, 77, 91, 0.35);
+  transform-origin: left center;
+  animation: esc-deny-meter 900ms linear both;
+}
+
+.esc-deny-sub {
+  color: #b06d75;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+}
+
+.esc-deny-stamp {
+  position: absolute;
+  right: -12px;
+  bottom: -13px;
+  padding: 4px 9px;
+  border: 2px solid rgba(239, 77, 91, 0.9);
+  background: rgba(20, 2, 5, 0.9);
+  color: var(--esc-danger);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  box-shadow: 0 0 20px rgba(239, 77, 91, 0.35);
+  transform: rotate(-9deg);
+  animation: esc-deny-stamp 900ms cubic-bezier(0.2, 1.7, 0.4, 1) both;
+}
+
+/* ---- 슬라이더 항목 ---- */
+
+.esc-item {
+  position: relative;
+  margin-bottom: 10px;
+  padding: 10px 10px 11px;
+  border: 1px solid rgba(227, 222, 209, 0.1);
+  background: rgba(255, 255, 255, 0.016);
+}
+
+.esc-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.esc-item-head b {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #cfd8d4;
+}
+
+.esc-item-head em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--esc-cyan);
+  text-shadow: 0 0 10px rgba(101, 218, 213, 0.45);
+}
+
+.esc-item small {
+  display: block;
+  margin-top: 2px;
+  color: #5d6763;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+/* 커스텀 슬라이더 — CRT 게이지 */
+
+.esc-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 18px;
+  margin: 9px 0 7px;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.esc-slider:focus-visible {
+  outline: 1px dashed rgba(101, 218, 213, 0.5);
+  outline-offset: 3px;
+}
+
+.esc-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border: 1px solid var(--esc-cyan-dim);
+  background:
+    linear-gradient(
+      to right,
+      rgba(101, 218, 213, 0.85) 0 var(--esc-fill, 50%),
+      rgba(101, 218, 213, 0.09) var(--esc-fill, 50%) 100%
+    );
+  box-shadow: 0 0 12px rgba(101, 218, 213, 0.12);
+}
+
+.esc-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 1px solid var(--esc-cyan);
+  border-radius: 0;
+  background: #0a1214;
+  box-shadow:
+    0 0 9px rgba(101, 218, 213, 0.7),
+    inset 0 0 5px rgba(101, 218, 213, 0.8);
+  transition: background 120ms ease;
+}
+
+.esc-slider:hover::-webkit-slider-thumb,
+.esc-slider:active::-webkit-slider-thumb {
+  background: var(--esc-cyan);
+}
+
+.esc-slider::-moz-range-track {
+  height: 6px;
+  border: 1px solid var(--esc-cyan-dim);
+  background: rgba(101, 218, 213, 0.09);
+}
+
+.esc-slider::-moz-range-progress {
+  height: 6px;
+  background: rgba(101, 218, 213, 0.85);
+  box-shadow: 0 0 12px rgba(101, 218, 213, 0.3);
+}
+
+.esc-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--esc-cyan);
+  border-radius: 0;
+  background: #0a1214;
+  box-shadow:
+    0 0 9px rgba(101, 218, 213, 0.7),
+    inset 0 0 5px rgba(101, 218, 213, 0.8);
+}
+
+.esc-slider:hover::-moz-range-thumb,
+.esc-slider:active::-moz-range-thumb {
+  background: var(--esc-cyan);
+}
+
+.esc-slider:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ---- REVOKED BY ADMIN ---- */
+
+.esc-revoked {
+  border-color: rgba(239, 77, 91, 0.38);
+  background: rgba(239, 77, 91, 0.03);
+}
+
+.esc-revoked .esc-item-head b {
+  color: #79837e;
+  text-decoration: line-through;
+}
+
+.esc-revoked .esc-item-head em {
+  color: #79837e;
+  text-shadow: none;
+}
+
+.esc-revoked-stamp {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  z-index: 2;
+  padding: 4px 7px;
+  border: 1px solid rgba(239, 77, 91, 0.85);
+  background: rgba(30, 4, 7, 0.86);
+  color: var(--esc-danger);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  box-shadow: 0 0 16px rgba(239, 77, 91, 0.3);
+  transform: translateY(-50%) rotate(-5deg);
+  animation: esc-stamp-in 260ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+/* ---- CONTROLS 탭 ---- */
+
+.esc-krow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 42px;
+  padding: 8px 8px;
+  border-bottom: 1px dashed rgba(227, 222, 209, 0.09);
+  transition: background 140ms ease;
+}
+
+.esc-krow:hover {
+  background: rgba(101, 218, 213, 0.03);
+}
+
+.esc-krow-name {
+  min-width: 0;
+}
+
+.esc-krow-name b {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #cfd8d4;
+}
+
+.esc-krow-name small {
+  display: block;
+  margin-top: 3px;
+  color: #5d6763;
+  font-size: 8.5px;
+}
+
+.esc-krow-val {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.esc-krow kbd {
+  min-width: 46px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.36);
+  background: #0c1112;
+  color: #d2cbbd;
+  font: 600 9px/1 'JetBrains Mono', 'Courier New', monospace;
+  letter-spacing: 0.1em;
+  text-align: center;
+  box-shadow: 0 2px 0 #020303;
+}
+
+.esc-kbd-unbound {
+  color: var(--esc-danger) !important;
+  border-color: rgba(239, 77, 91, 0.6) !important;
+  animation: esc-unbound-pulse 1.1s ease-in-out infinite;
+}
+
+.esc-krow.esc-unbound .esc-krow-name b {
+  color: #f0b9bf;
+}
+
+.esc-mini {
+  padding: 5px 7px;
+  border: 1px solid rgba(101, 218, 213, 0.3);
+  background: transparent;
+  color: #8fd8d4;
+  font: 500 9px/1 'JetBrains Mono', 'Courier New', monospace;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: 130ms ease;
+}
+
+.esc-mini:hover {
+  background: rgba(101, 218, 213, 0.13);
+  color: #c9f3f0;
+  box-shadow: 0 0 12px rgba(101, 218, 213, 0.18);
+}
+
+.esc-krow.esc-capturing {
+  background: rgba(228, 182, 90, 0.05);
+  border-bottom: 1px solid rgba(228, 182, 90, 0.4);
+}
+
+.esc-capture {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.esc-capture-blink {
+  color: var(--esc-gold);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 12px rgba(228, 182, 90, 0.5);
+  animation: esc-blink 640ms steps(1) infinite;
+}
+
+.esc-capture small {
+  color: #5d6763;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+}
+
+.esc-reject {
+  color: var(--esc-danger);
+  font-style: normal;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(239, 77, 91, 0.6);
+  animation: esc-reject-shake 340ms ease both;
+}
+
+.esc-controls-note {
+  margin: 11px 2px 2px;
+  color: #5d6763;
+  font-size: 8.5px;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+
+/* ---- 푸터 ---- */
+
+.esc-foot {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(101, 218, 213, 0.15);
+  color: #525c58;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+/* ---- 해금 등장 연출 (아이템/탭 공용) ---- */
+
+.esc-item-new {
+  animation: esc-unlock-in 760ms ease-out both;
+}
+
+/* ---- 균열 오버레이 (integrity < 100) ---- */
+
+.esc-cracks {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 320' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23cfeeed' stroke-opacity='0.16' stroke-width='2.4'%3E%3Cpath d='M258 54 L206 78 L148 86 L96 70'/%3E%3Cpath d='M258 54 L240 110 L246 168 L226 224'/%3E%3Cpath d='M258 54 L296 92 L322 148'/%3E%3C/g%3E%3Cg fill='none' stroke='%23cfeeed' stroke-opacity='0.55' stroke-width='1'%3E%3Cpath d='M258 54 L206 78 L148 86 L96 70'/%3E%3Cpath d='M258 54 L240 110 L246 168 L226 224'/%3E%3Cpath d='M258 54 L296 92 L322 148'/%3E%3Cpath d='M258 54 L282 30 L300 6'/%3E%3Cpath d='M206 78 L188 128 L196 150'/%3E%3Cpath d='M240 110 L198 132'/%3E%3Cpath d='M296 92 L318 78'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  animation: esc-crack-in 240ms ease-out both;
+}
+
+.esc-cracks-l2,
+.esc-cracks-l3 {
+  opacity: 0.8;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 320' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23cfeeed' stroke-opacity='0.16' stroke-width='2.4'%3E%3Cpath d='M258 54 L206 78 L148 86 L96 70'/%3E%3Cpath d='M258 54 L240 110 L246 168 L226 224'/%3E%3Cpath d='M258 54 L296 92 L322 148'/%3E%3C/g%3E%3Cg fill='none' stroke='%23cfeeed' stroke-opacity='0.55' stroke-width='1'%3E%3Cpath d='M258 54 L206 78 L148 86 L96 70'/%3E%3Cpath d='M258 54 L240 110 L246 168 L226 224'/%3E%3Cpath d='M258 54 L296 92 L322 148'/%3E%3Cpath d='M258 54 L282 30 L300 6'/%3E%3Cpath d='M206 78 L188 128 L196 150'/%3E%3Cpath d='M240 110 L198 132'/%3E%3Cpath d='M296 92 L318 78'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 320' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23cfeeed' stroke-opacity='0.14' stroke-width='2.4'%3E%3Cpath d='M74 210 L120 188 L170 196 L214 182'/%3E%3Cpath d='M74 210 L98 248 L92 296'/%3E%3C/g%3E%3Cg fill='none' stroke='%23cfeeed' stroke-opacity='0.5' stroke-width='1'%3E%3Cpath d='M74 210 L120 188 L170 196 L214 182'/%3E%3Cpath d='M74 210 L46 176 L38 128 L52 96'/%3E%3Cpath d='M74 210 L98 248 L92 296'/%3E%3Cpath d='M74 210 L30 232 L4 238'/%3E%3Cpath d='M120 188 L138 156'/%3E%3Cpath d='M46 176 L20 168'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.esc-cracks-l3 {
+  opacity: 1;
+  box-shadow: inset 0 0 60px rgba(239, 77, 91, 0.16);
+  animation: esc-crack-in 240ms ease-out both, esc-crack-warn 1.4s steps(2, end) infinite;
+}
+
+/* ---- 키프레임 ---- */
+
+@keyframes esc-panel-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scaleY(0.82);
+    filter: brightness(2.4);
+  }
+  55% {
+    opacity: 1;
+    filter: brightness(1.25);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes esc-hit-shake {
+  0% { transform: translate(0, 0); filter: brightness(2); }
+  15% { transform: translate(-8px, 4px) rotate(-0.7deg); }
+  30% { transform: translate(7px, -5px) rotate(0.6deg); filter: brightness(1.3); }
+  45% { transform: translate(-5px, 2px) rotate(-0.3deg); }
+  60% { transform: translate(4px, 3px) rotate(0.3deg); }
+  75% { transform: translate(-2px, -2px); }
+  100% { transform: translate(0, 0); filter: none; }
+}
+
+@keyframes esc-flicker {
+  0%, 100% { opacity: 0.55; }
+  47% { opacity: 0.68; }
+  48% { opacity: 0.5; }
+  76% { opacity: 0.62; }
+}
+
+@keyframes esc-blink {
+  50% { opacity: 0.22; }
+}
+
+@keyframes esc-denied {
+  0%, 100% { opacity: 1; }
+  18% { opacity: 0.3; }
+  22% { opacity: 1; }
+  56% { opacity: 1; }
+  60% { opacity: 0.45; }
+  64% { opacity: 1; }
+}
+
+/* ---- ACCESS DENIED 카드 (0.9초 수명) ---- */
+
+@keyframes esc-deny-veil {
+  0% { opacity: 0; }
+  4% { opacity: 1; }
+  86% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes esc-deny-card {
+  0% {
+    opacity: 0;
+    transform: scale(1.22) skewX(-9deg);
+    filter: brightness(3.4);
+  }
+  10% {
+    opacity: 1;
+    transform: none;
+    filter: brightness(1.5);
+  }
+  26% { transform: translateX(-7px) skewX(4deg); filter: brightness(1.9); }
+  30% { transform: translateX(6px); filter: none; }
+  52% { transform: none; }
+  58% { transform: translateX(4px) skewX(-3deg); filter: brightness(1.6); }
+  62% { transform: none; filter: none; }
+  86% { opacity: 1; transform: none; }
+  100% {
+    opacity: 0;
+    transform: scaleY(0.6) scaleX(1.06);
+    filter: brightness(2.6);
+  }
+}
+
+@keyframes esc-deny-split-a {
+  0%, 100% { transform: translate(-2px, 1px); opacity: 0.5; clip-path: inset(0 0 62% 0); }
+  50% { transform: translate(2px, -1px); opacity: 0.28; clip-path: inset(58% 0 0 0); }
+}
+
+@keyframes esc-deny-split-b {
+  0%, 100% { transform: translate(2px, -1px); opacity: 0.45; clip-path: inset(46% 0 0 0); }
+  50% { transform: translate(-3px, 1px); opacity: 0.3; clip-path: inset(0 0 54% 0); }
+}
+
+@keyframes esc-deny-meter {
+  0% { transform: scaleX(1); background: rgba(239, 77, 91, 0.85); }
+  100% { transform: scaleX(0); background: rgba(239, 77, 91, 0.85); }
+}
+
+@keyframes esc-deny-stamp {
+  0% { opacity: 0; transform: rotate(-9deg) scale(3); }
+  16% { opacity: 1; transform: rotate(-9deg) scale(1); }
+  86% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(-9deg) scale(1.1); }
+}
+
+@keyframes esc-unlock-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-14px);
+    clip-path: inset(0 100% 0 0);
+  }
+  34% {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0);
+    filter: none;
+  }
+  44% {
+    opacity: 0.25;
+    transform: translateX(4px) skewX(-7deg);
+    filter: hue-rotate(80deg) brightness(2.6);
+  }
+  54% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    box-shadow: 0 0 24px rgba(101, 218, 213, 0.45), inset 0 0 18px rgba(101, 218, 213, 0.2);
+  }
+  72% { opacity: 0.6; }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes esc-stamp-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) rotate(-5deg) scale(2.4);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-50%) rotate(-5deg) scale(1);
+  }
+}
+
+@keyframes esc-unbound-pulse {
+  50% {
+    background: rgba(60, 10, 14, 0.65);
+    box-shadow: 0 2px 0 #020303, 0 0 14px rgba(239, 77, 91, 0.55);
+  }
+}
+
+@keyframes esc-reject-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes esc-crack-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.06);
+    filter: brightness(3);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes esc-crack-warn {
+  0%, 100% { box-shadow: inset 0 0 60px rgba(239, 77, 91, 0.16); }
+  50% { box-shadow: inset 0 0 80px rgba(239, 77, 91, 0.3); }
+}
+
+/* 잠긴 항목 — 보이되 만질 수 없다 (죽음으로 해금) */
+.esc-panel .esc-item.esc-locked {
+  opacity: 0.42;
+  filter: saturate(0.2);
+}
+.esc-panel .esc-item.esc-locked .esc-item-head em {
+  color: #ef4d5b;
+  letter-spacing: 2px;
+}
+.esc-panel .esc-item.esc-locked .esc-slider {
+  pointer-events: none;
+}
+.esc-panel .esc-tabs button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
