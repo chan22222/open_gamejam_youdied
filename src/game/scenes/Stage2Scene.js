@@ -121,6 +121,8 @@ export class Stage2Scene extends Phaser.Scene {
     ).setDepth(60);
     this.voidRevealed = this.player.x > FRAME_RIGHT;
     this.voidCover.setAlpha(this.voidRevealed ? 0 : 1);
+    // 카메라도 프레임에 갇힌다 — DISPLAY를 써야 세계가 넓어진다.
+    if (!this.voidRevealed) this.cameras.main.setBounds(0, 0, FRAME_RIGHT + 4, 540);
 
     this.bindStoreEffects();
     this.emitStatus();
@@ -805,6 +807,7 @@ export class Stage2Scene extends Phaser.Scene {
     // 오른쪽 세계 공개 — DISPLAY 사용 또는 경계 통과 시 1회
     if (!this.voidRevealed && (effective('display') <= 70 || this.player.x > FRAME_RIGHT)) {
       this.voidRevealed = true;
+      this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H); // 카메라 해방
       this.tweens.add({ targets: this.voidCover, alpha: 0, duration: 900, ease: 'Sine.easeInOut' });
     }
 
